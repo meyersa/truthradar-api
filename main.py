@@ -43,6 +43,10 @@ app = FastAPI()
 class InputText(BaseModel):
     text: str
 
+# For monitoring
+@app.get("/ping")
+def pong():
+    return {"message": "pong"}
 
 @app.post("/predict")
 def predict(data: InputText, x_api_key: str = Header(default=None)):
