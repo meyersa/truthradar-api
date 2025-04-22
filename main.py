@@ -44,7 +44,7 @@ class InputText(BaseModel):
     text: str
 
 # For monitoring
-@app.get("/ping")
+@app.get("/predict")
 def pong():
     return {"message": "pong"}
 
