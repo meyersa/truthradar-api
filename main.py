@@ -8,12 +8,12 @@ import time
 from lib.loading import load_pickle_from_url, quick_test
 
 dotenv.load_dotenv()
-LOG_LEVEL = os.getenv("LOG_LEVEL", "info")
+LOG_LEVEL = os.getenv("LOG_LEVEL", "debug")
 MODEL_LINK = os.getenv("MODEL_LINK")
 VECTORIZER_LINK = os.getenv("VECTORIZER_LINK")
 API_KEY = os.getenv("API_KEY")
 
-level = getattr(logging, LOG_LEVEL.upper(), "debug")
+level = getattr(logging, LOG_LEVEL.upper())
 
 logging.basicConfig(stream=sys.stdout, level=level)
 logging.info(f"Log level set to {level}")
