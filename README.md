@@ -21,7 +21,6 @@ FastAPI service for serving predictions from trained models used by the TruthRad
 - `MODEL_LINK`: URL to the trained model (e.g., S3 or B2)
 - `VECTORIZER_LINK`: URL to the vectorizer
 - `API_KEY`: (optional) API key required for requests to `/predict`
-- `PORT`: (optional) Port to run the server on, defaults to `8000`
 - `LOG_LEVEL`: (optional) Set logging level (`debug`, `info`, etc.)
 
 ## API
