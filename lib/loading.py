@@ -30,8 +30,11 @@ def download(link: str, name: str) -> str:
     res = requests.get(link)
     res.raise_for_status()
 
+    # Stream to prevent OOM
     with open(path, "wb") as f:
-        f.write(res.content)
+        for chunk in res.iter_content(chunk_size=8192):
+            if chunk:
+                f.write(chunk)
 
     logging.info(f"Saved {name} to {path}")
     return path
