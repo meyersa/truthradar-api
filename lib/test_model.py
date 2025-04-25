@@ -1,5 +1,9 @@
 import unittest
 from model import Model
+import sys 
+import logging
+
+logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
 
 class TestModelInitialization(unittest.TestCase):
     """

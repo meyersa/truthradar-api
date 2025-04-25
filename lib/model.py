@@ -2,11 +2,17 @@ import os
 import requests
 import logging
 import pickle
+import time
+
+
+MAX_ELAPSED_MS = os.getenv("MAX_ELAPSED_MS", 20)
+
 
 class Model:
     """
     A class to handle downloading, loading, and testing a model from a URL.
     """
+
     MODEL_PATH = "./models"
 
     def __init__(self, link: str, name: str, vectorizer_link: str = None) -> None:
@@ -99,12 +105,14 @@ class Model:
 
         :param text: Sample input text to test.
         :return: Prediction score from the model.
-        :raises ValueError: If prediction fails or the score is invalid.
+        :raises ValueError: If prediction fails, the score is invalid, or it takes too long.
         """
         logging.info("Attempting quick test on model")
 
         if self.vectorizer is None or self.model is None:
             raise ValueError("Model object must include both model and vectorizer")
+
+        start_time = time.perf_counter()
 
         try:
             X = self.vectorizer.transform([text])
@@ -112,9 +120,14 @@ class Model:
         except Exception as e:
             raise ValueError(f"Could not perform quick test: {e}")
 
+        elapsed_ms = (time.perf_counter() - start_time) * 1000
         logging.debug(f"Sample prediction score: {score}")
+        logging.debug(f"Quick test time: {elapsed_ms:.2f} ms")
 
         if not (0 <= score <= 1):
-            raise ValueError("Model is not passing basic tests")
+            raise ValueError("Model is not passing basic score tests")
+
+        if elapsed_ms > MAX_ELAPSED_MS:
+            raise ValueError(f"Quick test too slow: {elapsed_ms:.2f} ms (limit 30ms)")
 
         return score
