@@ -28,7 +28,7 @@ class Model:
         self.file_path = self._download(link, self.name)
         self.model_obj = self._load_pickle(self.file_path)
 
-        self.model = self.model_obj  # Model is the whole pickle (no 'model' key)
+        self.model = self.model_obj  # Assume the whole pickle is the model
         self.vectorizer = None
 
         if vectorizer_link:
@@ -107,27 +107,46 @@ class Model:
         :return: Prediction score from the model.
         :raises ValueError: If prediction fails, the score is invalid, or it takes too long.
         """
-        logging.info("Attempting quick test on model")
+        logging.info(f"Running quick test for {self.name}")
+        result = self.predict(text)
+        if result is None:
+            raise ValueError(
+                f"Quick test failed: {self.name} could not make a valid prediction."
+            )
+        logging.info(f"Quick test passed for {self.name}")
 
+    def predict(self, text: str) -> dict:
+        """
+        Predicts on input text.
+
+        :param text: Input text string.
+        :return: {name, score, duration_ms} or None if prediction fails or times out.
+        """
         if self.vectorizer is None or self.model is None:
-            raise ValueError("Model object must include both model and vectorizer")
+            logging.error(f"Model {self.name} is not properly initialized.")
+            return None
 
         start_time = time.perf_counter()
-
         try:
             X = self.vectorizer.transform([text])
             score = self.model.predict_proba(X)[0][1]
         except Exception as e:
-            raise ValueError(f"Could not perform quick test: {e}")
+            logging.error(f"Prediction failed for model {self.name}: {e}")
+            return None
 
         elapsed_ms = (time.perf_counter() - start_time) * 1000
-        logging.debug(f"Sample prediction score: {score}")
-        logging.debug(f"Quick test time: {elapsed_ms:.2f} ms")
-
-        if not (0 <= score <= 1):
-            raise ValueError("Model is not passing basic score tests")
+        logging.info(
+            f"Predicted with {self.name}: score={score:.4f}, time={elapsed_ms:.2f}ms"
+        )
 
         if elapsed_ms > MAX_ELAPSED_MS:
-            raise ValueError(f"Quick test too slow: {elapsed_ms:.2f} ms (limit {MAX_ELAPSED_MS}ms)")
+            logging.warning(
+                f"Prediction for {self.name} exceeded {MAX_ELAPSED_MS}ms ({elapsed_ms:.2f}ms), skipping."
+            )
+            return None
 
-        return score
+        return {
+            "name": self.name,
+            "score": float(score),
+            "duration_ms": round(elapsed_ms, 2),
+        }

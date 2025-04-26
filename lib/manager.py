@@ -17,11 +17,11 @@ models = [
         "vectorizer": "https://f000.backblazeb2.com/file/TruthRadar/count_vectorizer.pkl",
         "link": "https://f000.backblazeb2.com/file/TruthRadar/count_Logistic_Regression.pkl",
     },
-    {
-        "name": "RandomForest",
-        "vectorizer": "https://f000.backblazeb2.com/file/TruthRadar/count_vectorizer.pkl",
-        "link": "https://truthradar.s3.us-west-000.backblazeb2.com/count_Random_Forest.pkl?versionId=4_z55a3e767b2b550e9956f0d18_f21189830fc161666_d20250422_m182715_c000_v0001412_t0019_u01745346435135",
-    },
+    # {
+    #     "name": "RandomForest",
+    #     "vectorizer": "https://f000.backblazeb2.com/file/TruthRadar/count_vectorizer.pkl",
+    #     "link": "https://truthradar.s3.us-west-000.backblazeb2.com/count_Random_Forest.pkl?versionId=4_z55a3e767b2b550e9956f0d18_f21189830fc161666_d20250422_m182715_c000_v0001412_t0019_u01745346435135",
+    # },
     {
         "name": "XGBoost",
         "vectorizer": "https://f000.backblazeb2.com/file/TruthRadar/count_vectorizer.pkl",
@@ -65,47 +65,12 @@ class Manager:
         """
         results = []
 
-        def predict_model(model):
-            try:
-                logging.info(f"Starting prediction with model: {model.name}")
-                import time
-
-                start = time.perf_counter()
-                score = model._quick_test(text)
-                elapsed_ms = (time.perf_counter() - start) * 1000
-
-                logging.info(
-                    f"Prediction complete for {model.name} in {elapsed_ms:.2f} ms. Score: {score:.4f}"
-                )
-
-                if elapsed_ms > MAX_ELAPSED_MS:
-                    logging.warning(
-                        f"Model {model.name} exceeded maximum allowed time ({elapsed_ms:.2f} ms > {MAX_ELAPSED_MS} ms). Skipping result."
-                    )
-                    return None
-
-                return {
-                    "name": model.name,
-                    "score": float(score),
-                }
-            except Exception as e:
-                logging.error(f"Prediction error for model {model.name}: {e}")
-                return None
-
         with ThreadPoolExecutor() as executor:
-            futures = {
-                executor.submit(predict_model, model): model for model in self.models
-            }
+            futures = {executor.submit(model.predict, text): model for model in self.models}
             for future in as_completed(futures):
-                try:
-                    result = future.result()
-                    if result:
-                        results.append(result)
-                except TimeoutError:
-                    model = futures[future]
-                    logging.error(
-                        f"Timeout occurred during prediction for model {model.name}"
-                    )
+                result = future.result()
+                if result:
+                    results.append(result)
 
         logging.info(
             f"Prediction completed for {len(results)} models out of {len(self.models)} loaded models."

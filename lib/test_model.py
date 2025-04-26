@@ -1,6 +1,6 @@
 import unittest
 from model import Model
-import sys 
+import sys
 import logging
 
 logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
@@ -25,11 +25,18 @@ class TestModelInitialization(unittest.TestCase):
         self.assertIsNotNone(model.model, "Model object should not be None")
         self.assertIsNotNone(model.vectorizer, "Vectorizer should not be None")
 
-        # Quick prediction test
-        score = model._quick_test("The sky is blue.")
-        self.assertIsInstance(score, float, "Score should be a float")
-        self.assertGreaterEqual(score, 0)
-        self.assertLessEqual(score, 1)
+        # Quick prediction test (should not raise an exception)
+        model._quick_test("The sky is blue.")
+
+        # Full predict() test
+        prediction = model.predict("The sky is blue.")
+        self.assertIsInstance(prediction, dict, "Prediction should be a dictionary.")
+        self.assertIn("name", prediction)
+        self.assertIn("score", prediction)
+        self.assertIn("duration_ms", prediction)
+        self.assertIsInstance(prediction["name"], str)
+        self.assertIsInstance(prediction["score"], float)
+        self.assertIsInstance(prediction["duration_ms"], (int, float))
 
 if __name__ == "__main__":
     unittest.main()

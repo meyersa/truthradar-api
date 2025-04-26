@@ -1,6 +1,6 @@
 import unittest
-from manager import Manager, models  # your actual manager + models list
-import sys 
+from manager import Manager, models
+import sys
 import logging
 
 logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
@@ -37,8 +37,13 @@ class TestManager(unittest.TestCase):
         for prediction in predictions:
             self.assertIn("name", prediction, "Each prediction must include a 'name'.")
             self.assertIn("score", prediction, "Each prediction must include a 'score'.")
+            self.assertIn("duration_ms", prediction, "Each prediction must include 'duration_ms'.")
             self.assertIsInstance(prediction["name"], str, "Model name must be a string.")
-            self.assertTrue(prediction["score"] is None or isinstance(prediction["score"], float), "Score must be a float or None.")
+            self.assertTrue(
+                prediction["score"] is None or isinstance(prediction["score"], float),
+                "Score must be a float or None."
+            )
+            self.assertIsInstance(prediction["duration_ms"], (int, float), "Duration must be numeric.")
 
 if __name__ == "__main__":
     unittest.main()
