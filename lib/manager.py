@@ -3,6 +3,9 @@ import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed, TimeoutError
 from lib.model import Model
 
+
+MAX_ELAPSED_MS = int(os.getenv("MAX_ELAPSED_MS", 50))
+
 models = [
     {
         "name": "BernoulliNB",
@@ -26,7 +29,6 @@ models = [
     },
 ]
 
-MAX_ELAPSED_MS = int(os.getenv("MAX_ELAPSED_MS", 20))
 
 class Manager:
     """
@@ -41,8 +43,12 @@ class Manager:
         for config in models:
             try:
                 logging.info(f"Attempting to load model: {config['name']}")
-                model = Model(link=config['link'], name=config['name'], vectorizer_link=config['vectorizer'])
-                model.description = config.get('description', "")
+                model = Model(
+                    link=config["link"],
+                    name=config["name"],
+                    vectorizer_link=config["vectorizer"],
+                )
+                model.description = config.get("description", "")
                 self.models.append(model)
                 logging.info(f"Successfully loaded model: {model.name}")
             except Exception as e:
@@ -63,14 +69,19 @@ class Manager:
             try:
                 logging.info(f"Starting prediction with model: {model.name}")
                 import time
+
                 start = time.perf_counter()
                 score = model._quick_test(text)
                 elapsed_ms = (time.perf_counter() - start) * 1000
 
-                logging.info(f"Prediction complete for {model.name} in {elapsed_ms:.2f} ms. Score: {score:.4f}")
+                logging.info(
+                    f"Prediction complete for {model.name} in {elapsed_ms:.2f} ms. Score: {score:.4f}"
+                )
 
                 if elapsed_ms > MAX_ELAPSED_MS:
-                    logging.warning(f"Model {model.name} exceeded maximum allowed time ({elapsed_ms:.2f} ms > {MAX_ELAPSED_MS} ms). Skipping result.")
+                    logging.warning(
+                        f"Model {model.name} exceeded maximum allowed time ({elapsed_ms:.2f} ms > {MAX_ELAPSED_MS} ms). Skipping result."
+                    )
                     return None
 
                 return {
@@ -82,7 +93,9 @@ class Manager:
                 return None
 
         with ThreadPoolExecutor() as executor:
-            futures = {executor.submit(predict_model, model): model for model in self.models}
+            futures = {
+                executor.submit(predict_model, model): model for model in self.models
+            }
             for future in as_completed(futures):
                 try:
                     result = future.result()
@@ -90,7 +103,11 @@ class Manager:
                         results.append(result)
                 except TimeoutError:
                     model = futures[future]
-                    logging.error(f"Timeout occurred during prediction for model {model.name}")
+                    logging.error(
+                        f"Timeout occurred during prediction for model {model.name}"
+                    )
 
-        logging.info(f"Prediction completed for {len(results)} models out of {len(self.models)} loaded models.")
+        logging.info(
+            f"Prediction completed for {len(results)} models out of {len(self.models)} loaded models."
+        )
         return results

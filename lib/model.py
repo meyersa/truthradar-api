@@ -5,7 +5,7 @@ import pickle
 import time
 
 
-MAX_ELAPSED_MS = os.getenv("MAX_ELAPSED_MS", 20)
+MAX_ELAPSED_MS = os.getenv("MAX_ELAPSED_MS", 50)
 
 
 class Model:
@@ -128,6 +128,6 @@ class Model:
             raise ValueError("Model is not passing basic score tests")
 
         if elapsed_ms > MAX_ELAPSED_MS:
-            raise ValueError(f"Quick test too slow: {elapsed_ms:.2f} ms (limit 30ms)")
+            raise ValueError(f"Quick test too slow: {elapsed_ms:.2f} ms (limit {MAX_ELAPSED_MS}ms)")
 
         return score
