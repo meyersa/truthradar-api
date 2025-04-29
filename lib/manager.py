@@ -4,7 +4,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from lib.model import Model
 
 
-MAX_ELAPSED_MS = int(os.getenv("MAX_ELAPSED_MS", 50))
+MAX_ELAPSED_MS = int(os.getenv("MAX_ELAPSED_MS", 1000))
 
 models = [
     {

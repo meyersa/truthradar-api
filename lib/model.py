@@ -5,7 +5,7 @@ import pickle
 import time
 
 
-MAX_ELAPSED_MS = os.getenv("MAX_ELAPSED_MS", 50)
+MAX_ELAPSED_MS = os.getenv("MAX_ELAPSED_MS", 1000)
 
 
 class Model:
