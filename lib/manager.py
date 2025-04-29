@@ -1,6 +1,6 @@
 import os
 import logging
-from concurrent.futures import ThreadPoolExecutor, as_completed, TimeoutError
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from lib.model import Model
 
 
@@ -8,24 +8,44 @@ MAX_ELAPSED_MS = int(os.getenv("MAX_ELAPSED_MS", 50))
 
 models = [
     {
-        "name": "BernoulliNB",
-        "vectorizer": "https://f000.backblazeb2.com/file/TruthRadar/count_vectorizer.pkl",
+        "name": "CountBernoulliNB",
+        "vectorizer": "https://f000.backblazeb2.com/file/TruthRadar/vectorizer_count.pkl",
         "link": "https://f000.backblazeb2.com/file/TruthRadar/count_Bernoulli_NB.pkl",
     },
     {
-        "name": "LogisticRegression",
-        "vectorizer": "https://f000.backblazeb2.com/file/TruthRadar/count_vectorizer.pkl",
+        "name": "CountLogisticRegression",
+        "vectorizer": "https://f000.backblazeb2.com/file/TruthRadar/vectorizer_count.pkl",
         "link": "https://f000.backblazeb2.com/file/TruthRadar/count_Logistic_Regression.pkl",
     },
     # {
-    #     "name": "RandomForest",
-    #     "vectorizer": "https://f000.backblazeb2.com/file/TruthRadar/count_vectorizer.pkl",
+    #     "name": "CountRandomForest",
+    #     "vectorizer": "https://f000.backblazeb2.com/file/TruthRadar/vectorizer_count.pkl",
     #     "link": "https://truthradar.s3.us-west-000.backblazeb2.com/count_Random_Forest.pkl?versionId=4_z55a3e767b2b550e9956f0d18_f21189830fc161666_d20250422_m182715_c000_v0001412_t0019_u01745346435135",
     # },
     {
-        "name": "XGBoost",
-        "vectorizer": "https://f000.backblazeb2.com/file/TruthRadar/count_vectorizer.pkl",
+        "name": "CountXGBoost",
+        "vectorizer": "https://f000.backblazeb2.com/file/TruthRadar/vectorizer_count.pkl",
         "link": "https://f000.backblazeb2.com/file/TruthRadar/count_XGBoost.pkl",
+    },
+        {
+        "name": "TFIDFBernoulliNB",
+        "vectorizer": "https://f000.backblazeb2.com/file/TruthRadar/vectorizer_tfidf.pkl",
+        "link": "https://f000.backblazeb2.com/file/TruthRadar/tfidf_Bernoulli_NB.pkl",
+    },
+    {
+        "name": "TFIDFLogisticRegression",
+        "vectorizer": "https://f000.backblazeb2.com/file/TruthRadar/vectorizer_tfidf.pkl",
+        "link": "https://f000.backblazeb2.com/file/TruthRadar/tfidf_Logistic_Regression.pkl",
+    },
+    # {
+    #     "name": "TFIDFRandomForest",
+    #     "vectorizer": "https://f000.backblazeb2.com/file/TruthRadar/vectorizer_tfidf.pkl",
+    #     "link": "https://truthradar.s3.us-west-000.backblazeb2.com/tfidf_Random_Forest.pkl?versionId=4_z55a3e767b2b550e9956f0d18_f21189830fc161666_d20250422_m182715_c000_v0001412_t0019_u01745346435135",
+    # },
+    {
+        "name": "TFIDFXGBoost",
+        "vectorizer": "https://f000.backblazeb2.com/file/TruthRadar/vectorizer_tfidf.pkl",
+        "link": "https://f000.backblazeb2.com/file/TruthRadar/tfidf_XGBoost.pkl",
     },
 ]
 
