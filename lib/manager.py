@@ -2,50 +2,52 @@ import os
 import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from lib.model import Model
+import contractions
+import nltk
+from nltk.corpus import stopwords
+import re
 
+nltk.download('punkt_tab')
+nltk.download("stopwords")
 
+STOPWORDS = set(stopwords.words("english"))
 MAX_ELAPSED_MS = int(os.getenv("MAX_ELAPSED_MS", 1000))
 
 models = [
     {
-        "name": "CountBernoulliNB",
-        "vectorizer": "https://f000.backblazeb2.com/file/TruthRadar/vectorizer_count.pkl",
-        "link": "https://f000.backblazeb2.com/file/TruthRadar/count_Bernoulli_NB.pkl",
-    },
-    {
-        "name": "CountLogisticRegression",
-        "vectorizer": "https://f000.backblazeb2.com/file/TruthRadar/vectorizer_count.pkl",
-        "link": "https://f000.backblazeb2.com/file/TruthRadar/count_Logistic_Regression.pkl",
-    },
-    # {
-    #     "name": "CountRandomForest",
-    #     "vectorizer": "https://f000.backblazeb2.com/file/TruthRadar/vectorizer_count.pkl",
-    #     "link": "https://truthradar.s3.us-west-000.backblazeb2.com/count_Random_Forest.pkl?versionId=4_z55a3e767b2b550e9956f0d18_f21189830fc161666_d20250422_m182715_c000_v0001412_t0019_u01745346435135",
-    # },
-    {
-        "name": "CountXGBoost",
-        "vectorizer": "https://f000.backblazeb2.com/file/TruthRadar/vectorizer_count.pkl",
-        "link": "https://f000.backblazeb2.com/file/TruthRadar/count_XGBoost.pkl",
-    },
-        {
-        "name": "TFIDFBernoulliNB",
+        "name": "BernoulliNB",
         "vectorizer": "https://f000.backblazeb2.com/file/TruthRadar/vectorizer_tfidf.pkl",
-        "link": "https://f000.backblazeb2.com/file/TruthRadar/tfidf_Bernoulli_NB.pkl",
+        "link": "https://f000.backblazeb2.com/file/TruthRadar/BernoulliNB.pkl",
     },
     {
-        "name": "TFIDFLogisticRegression",
+        "name": "LogisticRegression",
         "vectorizer": "https://f000.backblazeb2.com/file/TruthRadar/vectorizer_tfidf.pkl",
-        "link": "https://f000.backblazeb2.com/file/TruthRadar/tfidf_Logistic_Regression.pkl",
+        "link": "https://f000.backblazeb2.com/file/TruthRadar/LogisticRegression.pkl",
     },
-    # {
-    #     "name": "TFIDFRandomForest",
-    #     "vectorizer": "https://f000.backblazeb2.com/file/TruthRadar/vectorizer_tfidf.pkl",
-    #     "link": "https://truthradar.s3.us-west-000.backblazeb2.com/tfidf_Random_Forest.pkl?versionId=4_z55a3e767b2b550e9956f0d18_f21189830fc161666_d20250422_m182715_c000_v0001412_t0019_u01745346435135",
-    # },
     {
-        "name": "TFIDFXGBoost",
+        "name": "RandomForest",
         "vectorizer": "https://f000.backblazeb2.com/file/TruthRadar/vectorizer_tfidf.pkl",
-        "link": "https://f000.backblazeb2.com/file/TruthRadar/tfidf_XGBoost.pkl",
+        "link": "https://truthradar.s3.us-west-000.backblazeb2.com/RandomForest.pkl",
+    },
+    {
+        "name": "XGBoost",
+        "vectorizer": "https://f000.backblazeb2.com/file/TruthRadar/vectorizer_tfidf.pkl",
+        "link": "https://f000.backblazeb2.com/file/TruthRadar/XGBoost.pkl",
+    },
+    {
+        "name": "PassiveAggressive",
+        "vectorizer": "https://f000.backblazeb2.com/file/TruthRadar/vectorizer_tfidf.pkl",
+        "link": "https://f000.backblazeb2.com/file/TruthRadar/PassiveAggressive.pkl",
+    },
+    {
+        "name": "RidgeClassifier",
+        "vectorizer": "https://f000.backblazeb2.com/file/TruthRadar/vectorizer_tfidf.pkl",
+        "link": "https://f000.backblazeb2.com/file/TruthRadar/RidgeClassifier.pkl",
+    },
+    {
+        "name": "SGDClassifier",
+        "vectorizer": "https://f000.backblazeb2.com/file/TruthRadar/vectorizer_tfidf.pkl",
+        "link": "https://f000.backblazeb2.com/file/TruthRadar/SGDClassifier.pkl",
     },
 ]
 
@@ -76,6 +78,30 @@ class Manager:
 
         logging.info(f"Total models initialized: {len(self.models)}")
 
+    def _preprocess_text(self, text: str) -> str:
+        """
+        Preprocess text to match model training
+
+        :param text: Text to process
+        :return: Processed text
+        """
+        # Remove Contractions
+        try:
+            text = contractions.fix(text)
+        except Exception:
+            pass
+
+        # Lowercase
+        text = text.lower()
+
+        # Remove Punctuation
+        text = re.sub(r"[^\w\s]", "", text)
+
+        # Remove Stopwards
+        tokens = nltk.word_tokenize(text)
+        tokens = [t for t in tokens if t not in STOPWORDS]
+        return " ".join(tokens)
+
     def predict_all(self, text: str) -> list:
         """
         Run a text input through all loaded models in parallel.
@@ -85,8 +111,13 @@ class Manager:
         """
         results = []
 
+        # Prepare text for prediction
+        text = self._preprocess_text(text)
+        
         with ThreadPoolExecutor() as executor:
-            futures = {executor.submit(model.predict, text): model for model in self.models}
+            futures = {
+                executor.submit(model.predict, text): model for model in self.models
+            }
             for future in as_completed(futures):
                 result = future.result()
                 if result:

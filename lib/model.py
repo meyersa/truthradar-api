@@ -1,9 +1,9 @@
 import os
 import requests
 import logging
-import pickle
+import joblib
 import time
-
+from scipy.special import expit
 
 MAX_ELAPSED_MS = os.getenv("MAX_ELAPSED_MS", 1000)
 
@@ -94,8 +94,7 @@ class Model:
         logging.info(f"Loading pickle from {path}")
 
         try:
-            with open(path, "rb") as f:
-                return pickle.load(f)
+            return joblib.load(path)
         except Exception as e:
             raise ValueError(f"Could not load Pickle: {e}")
 
@@ -116,12 +115,6 @@ class Model:
         logging.info(f"Quick test passed for {self.name}")
 
     def predict(self, text: str) -> dict:
-        """
-        Predicts on input text.
-
-        :param text: Input text string.
-        :return: {name, score, duration_ms} or None if prediction fails or times out.
-        """
         if self.vectorizer is None or self.model is None:
             logging.error(f"Model {self.name} is not properly initialized.")
             return None
@@ -129,7 +122,15 @@ class Model:
         start_time = time.perf_counter()
         try:
             X = self.vectorizer.transform([text])
-            score = self.model.predict_proba(X)[0][1]
+
+            if hasattr(self.model, "predict_proba"):
+                score = self.model.predict_proba(X)[0][1]
+            elif hasattr(self.model, "decision_function"):
+                score = expit(self.model.decision_function(X)[0])  # Convert to [0, 1]
+            else:
+                logging.error(f"Model {self.name} does not support prediction scoring.")
+                return None
+
         except Exception as e:
             logging.error(f"Prediction failed for model {self.name}: {e}")
             return None
