@@ -1,7 +1,8 @@
 FROM python:3.9-slim
 
-# Install tini
-RUN apt-get update && apt-get install -y tini && apt-get clean
+# Tinit for exiting cleanly
+# Build essentials for python packages
+RUN apt-get update && apt-get install -y tini build-essentials && apt-get clean
 
 WORKDIR /app
 
