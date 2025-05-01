@@ -2,7 +2,7 @@ FROM python:3.9-slim
 
 # Tinit for exiting cleanly
 # Build essentials for python packages
-RUN apt-get update && apt-get install -y tini build-essentials && apt-get clean
+RUN apt-get update && apt-get install -y tini build-essential && apt-get clean
 
 WORKDIR /app
 
